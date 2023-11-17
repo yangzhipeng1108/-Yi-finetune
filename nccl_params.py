@@ -1,0 +1,7 @@
+# export  NCCL_P2P_DISABLE=0
+# export NCCL_P2P_DIRECT_DISABLE=0
+# export NCCL_IB_DISABLE=0
+
+
+# export NCCL_IB_DISABLE=1
+# export NCCL_IBEXT_DISABLE=1
