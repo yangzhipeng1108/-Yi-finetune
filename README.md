@@ -8,12 +8,6 @@
 
 PS：没有用Trainer（虽然Trainer代码简单，但不易修改，大模型时代算法工程师本就成为了数据工程师，因此更需了解训练流程）
 
-## 更新简介
-- update-2023.08.06 代码和模型已经更新到最新，支持单卡&多卡训练，支持Yi2模型训练、支持全量参数训练，所有代码进行了结构增加可读性。
-- update-2023.06.12 [**增加流水线并行训练方法**](https://zhuanlan.zhihu.com/p/636488690)，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
-- update-2023.04.18 **增加文本生成任务评测**，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
-- update-2023.04.05 **增加信息抽取任务评测**，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
-
 ## 微调方法
 模型微调时，如果遇到显存不够的情况，可以开启gradient_checkpointing、zero3、offload等参数来节省显存。
 
