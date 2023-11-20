@@ -1,6 +1,6 @@
 
-## ChatGLM微调
-本项目主要针对ChatGLM和ChatGLM2模型进行不同方式的微调（Freeze方法、Lora方法、P-Tuning方法、全量参数等），并对比大模型在不同微调方法上的效果，主要针对信息抽取任务、生成任务、分类任务等。
+## Yi微调
+本项目主要针对Yi和Yi2模型进行不同方式的微调（Freeze方法、Lora方法、P-Tuning方法、全量参数等），并对比大模型在不同微调方法上的效果，主要针对信息抽取任务、生成任务、分类任务等。
 
 本项目支持单卡训练&多卡训练，由于采用单指令集方式微调，模型微调之后**并没有出现严重的灾难性遗忘**。
 
@@ -9,10 +9,10 @@
 PS：没有用Trainer（虽然Trainer代码简单，但不易修改，大模型时代算法工程师本就成为了数据工程师，因此更需了解训练流程）
 
 ## 更新简介
-- update-2023.08.06 代码和模型已经更新到最新，支持单卡&多卡训练，支持ChatGLM2模型训练、支持全量参数训练，所有代码进行了结构增加可读性。
-- update-2023.06.12 [**增加流水线并行训练方法**](https://zhuanlan.zhihu.com/p/636488690)，请看[v0.1 Tag](https://github.com/liucongg/ChatGLM-Finetuning/tree/v0.1)
-- update-2023.04.18 **增加文本生成任务评测**，请看[v0.1 Tag](https://github.com/liucongg/ChatGLM-Finetuning/tree/v0.1)
-- update-2023.04.05 **增加信息抽取任务评测**，请看[v0.1 Tag](https://github.com/liucongg/ChatGLM-Finetuning/tree/v0.1)
+- update-2023.08.06 代码和模型已经更新到最新，支持单卡&多卡训练，支持Yi2模型训练、支持全量参数训练，所有代码进行了结构增加可读性。
+- update-2023.06.12 [**增加流水线并行训练方法**](https://zhuanlan.zhihu.com/p/636488690)，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
+- update-2023.04.18 **增加文本生成任务评测**，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
+- update-2023.04.05 **增加信息抽取任务评测**，请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
 
 ## 微调方法
 模型微调时，如果遇到显存不够的情况，可以开启gradient_checkpointing、zero3、offload等参数来节省显存。
@@ -31,11 +31,11 @@ for name, param in model.named_parameters():
 针对模型不同层进行修改，可以自行修改freeze_module_name参数配置，例如"layers.27.,layers.26.,layers.25.,layers.24."。
 训练代码均采用DeepSpeed进行训练，可设置参数包含train_path、model_name_or_path、mode、train_type、freeze_module_name、ds_file、num_train_epochs、per_device_train_batch_size、gradient_accumulation_steps、output_dir等， 可根据自己的任务配置。
 
-ChatGLM单卡训练
+Yi单卡训练
 ```
 CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
                 --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM-6B/ \
+                --model_name_or_path Yi-6B/ \
                 --per_device_train_batch_size 1 \
                 --max_len 1560 \
                 --max_src_len 1024 \
@@ -53,11 +53,11 @@ CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
                 --show_loss_step 10 \
                 --output_dir ./output-glm
 ```
-ChatGLM四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
+Yi四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
                 --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM-6B/ \
+                --model_name_or_path Yi-6B/ \
                 --per_device_train_batch_size 1 \
                 --max_len 1560 \
                 --max_src_len 1024 \
@@ -75,66 +75,9 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
                 --show_loss_step 10 \
                 --output_dir ./output-glm
 ```
-ChatGLM2单卡训练
-```
-CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
-                --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM2-6B/ \
-                --per_device_train_batch_size 1 \
-                --max_len 1560 \
-                --max_src_len 1024 \
-                --learning_rate 1e-4 \
-                --weight_decay 0.1 \
-                --num_train_epochs 2 \
-                --gradient_accumulation_steps 4 \
-                --warmup_ratio 0.1 \
-                --mode glm2 \
-                --train_type freeze \
-                --freeze_module_name "layers.27.,layers.26.,layers.25.,layers.24." \
-                --seed 1234 \
-                --ds_file ds_zero2_no_offload.json \
-                --gradient_checkpointing \
-                --show_loss_step 10 \
-                --output_dir ./output-glm2
-```
-ChatGLM2四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
-```
-CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
-                --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM2-6B/ \
-                --per_device_train_batch_size 1 \
-                --max_len 1560 \
-                --max_src_len 1024 \
-                --learning_rate 1e-4 \
-                --weight_decay 0.1 \
-                --num_train_epochs 2 \
-                --gradient_accumulation_steps 4 \
-                --warmup_ratio 0.1 \
-                --mode glm2 \
-                --train_type freeze \
-                --freeze_module_name "layers.27.,layers.26.,layers.25.,layers.24." \
-                --seed 1234 \
-                --ds_file ds_zero2_no_offload.json \
-                --gradient_checkpointing \
-                --show_loss_step 10 \
-                --output_dir ./output-glm2
-```
-PS：ChatGLM微调时所用显存要比ChatGLM2多，详细显存占比如下：
-
-| Model |  DeepSpeed-Stage |  Offload | Gradient Checkpointing |  Batch Size | Max Length | GPU-A40 Number | 所耗显存 |
-| ------- | ------ | ------  | ------ | ------ | ------  | ------ | ------ |
-| ChaGLM | zero2 | No | Yes | 1 | 1560  | 1 | 36G |
-| ChaGLM | zero2 | No | No | 1 | 1560  | 1 | 38G |
-| ChaGLM | zero2 | No | Yes | 1 | 1560  | 4 | 24G |
-| ChaGLM | zero2 | No | No | 1 | 1560  | 4 | 29G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 1 | 35G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 1 | 36G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 4 | 22G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 4 | 27G |
-
 
 ### PT方法
-PT方法，即P-Tuning方法，参考[ChatGLM官方代码](https://github.com/THUDM/ChatGLM-6B/blob/main/ptuning/README.md) ，是一种针对于大模型的soft-prompt方法。
+PT方法，即P-Tuning方法，参考[Yi官方代码](https://github.com/THUDM/Yi-6B/blob/main/ptuning/README.md) ，是一种针对于大模型的soft-prompt方法。
 
 ![](images/PT.png)
 - P-Tuning仅对大模型的Embedding加入新的参数。[paper](https://arxiv.org/abs/2103.10385)
@@ -154,11 +97,11 @@ for name, param in model.named_parameters():
 
 训练代码均采用DeepSpeed进行训练，可设置参数包含train_path、model_name_or_path、mode、train_type、pre_seq_len、prefix_projection、ds_file、num_train_epochs、per_device_train_batch_size、gradient_accumulation_steps、output_dir等， 可根据自己的任务配置。
 
-ChatGLM单卡训练
+Yi单卡训练
 ```
 CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
                 --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM-6B \
+                --model_name_or_path Yi-6B \
                 --per_device_train_batch_size 1 \
                 --max_len 768 \
                 --max_src_len 512 \
@@ -177,11 +120,11 @@ CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
                 --prefix_projection True \
                 --output_dir ./output-glm
 ```
-ChatGLM四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
+Yi四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
                 --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM-6B \
+                --model_name_or_path Yi-6B \
                 --per_device_train_batch_size 1 \
                 --max_len 1560 \
                 --max_src_len 1024 \
@@ -200,64 +143,6 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
                 --prefix_projection True \
                 --output_dir ./output-glm
 ```
-ChatGLM2单卡训练
-```
-CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
-                --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM2-6B \
-                --per_device_train_batch_size 1 \
-                --max_len 1560 \
-                --max_src_len 1024 \
-                --learning_rate 1e-4 \
-                --weight_decay 0.1 \
-                --num_train_epochs 2 \
-                --gradient_accumulation_steps 4 \
-                --warmup_ratio 0.1 \
-                --mode glm2 \
-                --train_type ptuning \
-                --seed 1234 \
-                --ds_file ds_zero2_no_offload.json \
-                --gradient_checkpointing \
-                --show_loss_step 10 \
-                --pre_seq_len 16 \
-                --prefix_projection True \
-                --output_dir ./output-glm2
-```
-ChatGLM2四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
-```
-CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
-                --train_path data/spo_0.json \
-                --model_name_or_path ChatGLM2-6B \
-                --per_device_train_batch_size 1 \
-                --max_len 1560 \
-                --max_src_len 1024 \
-                --learning_rate 1e-4 \
-                --weight_decay 0.1 \
-                --num_train_epochs 2 \
-                --gradient_accumulation_steps 4 \
-                --warmup_ratio 0.1 \
-                --mode glm2 \
-                --train_type ptuning \
-                --seed 1234 \
-                --ds_file ds_zero2_no_offload.json \
-                --gradient_checkpointing \
-                --show_loss_step 10 \
-                --pre_seq_len 16 \
-                --prefix_projection True \
-                --output_dir ./output-glm2
-```
-PS：ChatGLM微调时所用显存要比ChatGLM2多，详细显存占比如下：
-
-| Model |  DeepSpeed-Stage |  Offload | Gradient Checkpointing |  Batch Size | Max Length | GPU-A40 Number | 所耗显存 |
-| ------- | ------ | ------  | ------ | ------ | ------  | ------ | ------ |
-| ChaGLM | zero2 | No | Yes | 1 | 768  | 1 | 43G |
-| ChaGLM | zero2 | No | No | 1 | 300  | 1 | 44G |
-| ChaGLM | zero2 | No | Yes | 1 | 1560  | 4 | 37G |
-| ChaGLM | zero2 | No | No | 1 | 1360  | 4 | 44G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 1 | 20G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 1 | 40G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 4 | 19G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 4 | 39G |
 
 
 ### Lora方法
@@ -286,11 +171,11 @@ model.config.torch_dtype = torch.float32
 ```
 训练代码均采用DeepSpeed进行训练，可设置参数包含train_path、model_name_or_path、mode、train_type、lora_dim、lora_alpha、lora_dropout、lora_module_name、ds_file、num_train_epochs、per_device_train_batch_size、gradient_accumulation_steps、output_dir等， 可根据自己的任务配置。
 
-ChatGLM单卡训练
+Yi单卡训练
 ```
 CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
               --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM-6B \
+              --model_name_or_path Yi-6B \
               --per_device_train_batch_size 1 \
               --max_len 1560 \
               --max_src_len 1024 \
@@ -311,11 +196,11 @@ CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
               --show_loss_step 10 \
               --output_dir ./output-glm
 ```
-ChatGLM四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
+Yi四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
 ```
 CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
               --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM-6B \
+              --model_name_or_path Yi-6B \
               --per_device_train_batch_size 1 \
               --max_len 1560 \
               --max_src_len 1024 \
@@ -336,131 +221,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
               --show_loss_step 10 \
               --output_dir ./output-glm
 ```
-ChatGLM2单卡训练
-```
-CUDA_VISIBLE_DEVICES=0 deepspeed --master_port 520 train.py \
-              --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM2-6B \
-              --per_device_train_batch_size 1 \
-              --max_len 1560 \
-              --max_src_len 1024 \
-              --learning_rate 1e-4 \
-              --weight_decay 0.1 \
-              --num_train_epochs 2 \
-              --gradient_accumulation_steps 4 \
-              --warmup_ratio 0.1 \
-              --mode glm2 \
-              --train_type lora \
-              --lora_dim 16 \
-              --lora_alpha 64 \
-              --lora_dropout 0.1 \
-              --lora_module_name "query_key_value,dense_h_to_4h,dense_4h_to_h,dense" \
-              --seed 1234 \
-              --ds_file ds_zero2_no_offload.json \
-              --gradient_checkpointing \
-              --show_loss_step 10 \
-              --output_dir ./output-glm2
-```
-ChatGLM2四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
-```
-CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
-              --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM2-6B \
-              --per_device_train_batch_size 1 \
-              --max_len 1560 \
-              --max_src_len 1024 \
-              --learning_rate 1e-4 \
-              --weight_decay 0.1 \
-              --num_train_epochs 2 \
-              --gradient_accumulation_steps 4 \
-              --warmup_ratio 0.1 \
-              --mode glm2 \
-              --train_type lora \
-              --lora_dim 16 \
-              --lora_alpha 64 \
-              --lora_dropout 0.1 \
-              --lora_module_name "query_key_value,dense_h_to_4h,dense_4h_to_h,dense" \
-              --seed 1234 \
-              --ds_file ds_zero2_no_offload.json \
-              --gradient_checkpointing \
-              --show_loss_step 10 \
-              --output_dir ./output-glm2
-```
-PS：ChatGLM微调时所用显存要比ChatGLM2多，详细显存占比如下：
 
-| Model |  DeepSpeed-Stage |  Offload | Gradient Checkpointing |  Batch Size | Max Length | GPU-A40 Number | 所耗显存 |
-| ------- | ------ | ------  | ------ | ------ | ------  | ------ | ------ |
-| ChaGLM | zero2 | No | Yes | 1 | 1560  | 1 | 20G |
-| ChaGLM | zero2 | No | No | 1 | 1560  | 1 | 45G |
-| ChaGLM | zero2 | No | Yes | 1 | 1560  | 4 | 20G |
-| ChaGLM | zero2 | No | No | 1 | 1560  | 4 | 45G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 1 | 20G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 1 | 43G |
-| ChaGLM2 | zero2 | No | Yes | 1 | 1560  | 4 | 19G |
-| ChaGLM2 | zero2 | No | No | 1 | 1560  | 4 | 42G |
-
-注意：Lora方法在模型保存时仅保存了Lora训练参数，因此在模型预测时需要将模型参数进行合并，具体参考merge_lora.py。
-
-### 全参方法
-全参方法，对大模型进行全量参数训练，主要借助DeepSpeed-Zero3方法，对模型参数进行多卡分割，并借助Offload方法，将优化器参数卸载到CPU上以解决显卡不足问题。
-
-微调代码，见train.py，核心部分如下：
-```python3
-model = MODE[args.mode]["model"].from_pretrained(args.model_name_or_path)
-```
-训练代码均采用DeepSpeed进行训练，可设置参数包含train_path、model_name_or_path、mode、train_type、ds_file、num_train_epochs、per_device_train_batch_size、gradient_accumulation_steps、output_dir等， 可根据自己的任务配置。
-
-ChatGLM四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
-```
-CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
-              --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM-6B \
-              --per_device_train_batch_size 1 \
-              --max_len 1560 \
-              --max_src_len 1024 \
-              --learning_rate 1e-4 \
-              --weight_decay 0.1 \
-              --num_train_epochs 2 \
-              --gradient_accumulation_steps 4 \
-              --warmup_ratio 0.1 \
-              --mode glm \
-              --train_type all \
-              --seed 1234 \
-              --ds_file ds_zero3_offload.json \
-              --gradient_checkpointing \
-              --show_loss_step 10 \
-              --output_dir ./output-glm
-```
-ChatGLM2四卡训练，通过CUDA_VISIBLE_DEVICES控制具体哪几块卡进行训练，如果不加该参数，表示使用运行机器上所有卡进行训练
-```
-CUDA_VISIBLE_DEVICES=0,1,2,3 deepspeed --master_port 520 train.py \
-              --train_path data/spo_0.json \
-              --model_name_or_path ChatGLM2-6B \
-              --per_device_train_batch_size 1 \
-              --max_len 1560 \
-              --max_src_len 1024 \
-              --learning_rate 1e-4 \
-              --weight_decay 0.1 \
-              --num_train_epochs 2 \
-              --gradient_accumulation_steps 4 \
-              --warmup_ratio 0.1 \
-              --mode glm2 \
-              --train_type all \
-              --seed 1234 \
-              --ds_file ds_zero3_no_offload.json \
-              --gradient_checkpointing \
-              --show_loss_step 10 \
-              --output_dir ./output-glm2
-```
-PS：ChatGLM微调时所用显存要比ChatGLM2多，详细显存占比如下：
-
-| Model |  DeepSpeed-Stage |  Offload | Gradient Checkpointing |  Batch Size | Max Length | GPU-A40 Number | 所耗显存 |
-| ------- | ------ | ------  | ------ | ------ | ------  | ------ | ------ |
-| ChaGLM | zero3 | Yes | Yes | 1 | 1560  | 4 | 33G |
-| ChaGLM2 | zero3 | No | Yes | 1 | 1560  | 4 | 44G |
-| ChaGLM2 | zero3 | Yes | Yes | 1 | 1560  | 4 | 26G |
-
-后面补充DeepSpeed的Zero-Stage的相关内容说明。
 
 ### 运行环境
 查看requirements.txt文件
@@ -535,7 +296,7 @@ PS：ChatGLM微调时所用显存要比ChatGLM2多，详细显存占比如下：
 ## 流水线并行训练
 代码说明见：[大模型流水线并行（Pipeline）实战](https://zhuanlan.zhihu.com/p/636488690)
 
-请看[v0.1 Tag](https://github.com/liucongg/ChatGLM-Finetuning/tree/v0.1)
+请看[v0.1 Tag](https://github.com/liucongg/Yi-Finetuning/tree/v0.1)
 
 ## Star History
-![Star History Chart](https://api.star-history.com/svg?repos=liucongg/ChatGLM-Finetuning&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=liucongg/Yi-Finetuning&type=Date)
